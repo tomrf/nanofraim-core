@@ -8,15 +8,12 @@ use Nanofraim\Exception\FrameworkException;
 use Nanofraim\Interface\ResponseEmitterInterface;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use PhpCsFixer\Cache\CacheInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use Psr\Log\LoggerInterface;
 use Relay\Relay;
 use Tomrf\ServiceContainer\ServiceContainer;
-use Tomrf\Session\Session;
 
 class Application
 {
@@ -43,14 +40,14 @@ class Application
     public function createServerRequestFromGlobals(): ServerRequestInterface
     {
         $psr17Factory = new Psr17Factory();
-        $this->serverRequestCreator = new ServerRequestCreator(
+        $serverRequestCreator = new ServerRequestCreator(
             $psr17Factory,
             $psr17Factory,
             $psr17Factory,
             $psr17Factory,
         );
 
-        return $this->serverRequestCreator->fromGlobals();
+        return $serverRequestCreator->fromGlobals();
     }
 
     private function createRelay(): Relay
@@ -66,31 +63,11 @@ class Application
             throw new FrameworkException('Middleware must be an array, found '.\gettype($middleware));
         }
 
+        $middlewareResolver = new RelayMiddlewareResolver();
+
         return new Relay(
             $middleware,
-            function ($class) use ($serviceContainer): MiddlewareInterface {
-                $instance = $serviceContainer->get($class);
-
-                $serviceContainer->fulfillAwarenessTraits(
-                    $instance,
-                    [
-                        'Nanofraim\Trait\ServiceContainerAwareTrait' => [
-                            'setServiceContainer' => fn () => $serviceContainer,
-                        ],
-                        'Psr\Log\LoggerAwareTrait' => [
-                            'setLogger' => LoggerInterface::class,
-                        ],
-                        'Nanofraim\Trait\CacheAwareTrait' => [
-                            'setCache' => CacheInterface::class,
-                        ],
-                        'Nanofraim\Trait\SessionAwareTrait' => [
-                            'setSession' => Session::class,
-                        ],
-                    ]
-                );
-
-                return $instance;
-            }
+            fn ($class): MiddlewareInterface => $middlewareResolver->resolveMiddleware($class, $serviceContainer)
         );
     }
 }
