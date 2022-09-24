@@ -35,6 +35,7 @@ class SimpleCacheProvider extends AbstractProvider
 
             case 'redis':
                 $pool = $this->createRedisPool();
+
                 break;
 
             case 'filesystem':
@@ -51,10 +52,25 @@ class SimpleCacheProvider extends AbstractProvider
 
     private function createFilesystemPool(): FilesystemCachePool
     {
+        $root = $this->config->get('adapter.filesystem.root');
+        if (null === $root) {
+            throw new FrameworkException('No root path defined for filesystem cache adapter');
+        }
+
+        $directory = $this->config->get('adapter.filesystem.directory');
+        if (null === $directory) {
+            throw new FrameworkException('No directory defined for filesystem cache adapter');
+        }
+
+        // make sure $root and $directory can be cast to string
+        if (!is_scalar($root) || !is_scalar($directory)) {
+            throw new FrameworkException('Root and directory must be scalar values');
+        }
+
         $cachePath = sprintf(
             '%s/%s',
-            $this->config->get('adapters.filesystem.root'),
-            $this->config->get('adapters.filesystem.directory'),
+            $root,
+            $directory,
         );
 
         if ('/' === $cachePath) {
@@ -85,7 +101,13 @@ class SimpleCacheProvider extends AbstractProvider
 
         $auth = $this->config->get(
             'adapters.redis.auth',
+            false
         );
+
+        // make sure all variables are scalar
+        if (!is_scalar($host) || !is_scalar($port) || !is_scalar($timeout) || !is_scalar($auth)) {
+            throw new FrameworkException('Redis cache adapter configuration is invalid, contains non-scalar values');
+        }
 
         try {
             $client = new Redis();
@@ -96,15 +118,15 @@ class SimpleCacheProvider extends AbstractProvider
         }
 
         try {
-            $client->connect($host, $port, $timeout);
+            $client->connect((string) $host, (int) $port, (int) $timeout);
         } catch (\RedisException $e) {
             throw new FrameworkException(
                 'Could not connect to redis: '.$e->getMessage()
             );
         }
 
-        if ($auth) {
-            if (false === $client->auth($auth)) {
+        if (false !== $auth) {
+            if (false === $client->auth((string) $auth)) {
                 throw new FrameworkException(
                     'Redis authentication failed: '.$client->getLastError()
                 );
@@ -112,6 +134,5 @@ class SimpleCacheProvider extends AbstractProvider
         }
 
         return new RedisCachePool($client);
-
     }
 }

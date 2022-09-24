@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace Nanofraim;
 
+use Nanofraim\Exception\FrameworkException;
 use Psr\Http\Server\MiddlewareInterface;
+use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface;
+use Tomrf\ServiceContainer\ServiceContainer;
+use Tomrf\Session\Session;
 
 class RelayMiddlewareResolver
 {
-    public function resolveMiddleware($class, $serviceContainer): MiddlewareInterface
+    public function resolveMiddleware(string $class, ServiceContainer $serviceContainer): MiddlewareInterface
     {
         $instance = $serviceContainer->get($class);
+
+        if (!$instance instanceof MiddlewareInterface) {
+            throw new FrameworkException('Middleware must implement MiddlewareInterface');
+        }
 
         $serviceContainer->fulfillAwarenessTraits(
             $instance,

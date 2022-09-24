@@ -11,8 +11,10 @@ class LoggerProvider extends AbstractProvider
 {
     public function createService(): \Psr\Log\LoggerInterface
     {
+        $path = $this->config->get('path');
+
         return new Logger(
-            $this->config->get('path') ? (string) $this->config->get('path') : null,
+            is_scalar($path) ? (string) $path : null,
         );
     }
 }
