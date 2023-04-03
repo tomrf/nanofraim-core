@@ -9,12 +9,16 @@ use Cache\Adapter\PHPArray\ArrayCachePool;
 use Cache\Adapter\Redis\RedisCachePool;
 use Cache\Adapter\Void\VoidCachePool;
 use Cache\Bridge\SimpleCache\SimpleCacheBridge;
+use Exception;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Nanofraim\AbstractProvider;
 use Nanofraim\Exception\FrameworkException;
 use Psr\SimpleCache\CacheInterface;
 use Redis;
+use RedisException;
+
+use function is_scalar;
 
 class SimpleCacheProvider extends AbstractProvider
 {
@@ -111,7 +115,7 @@ class SimpleCacheProvider extends AbstractProvider
 
         try {
             $client = new Redis();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new FrameworkException(
                 'Could not create instance of Redis: '.$e->getMessage()
             );
@@ -119,7 +123,7 @@ class SimpleCacheProvider extends AbstractProvider
 
         try {
             $client->connect((string) $host, (int) $port, (int) $timeout);
-        } catch (\RedisException $e) {
+        } catch (RedisException $e) {
             throw new FrameworkException(
                 'Could not connect to redis: '.$e->getMessage()
             );

@@ -7,6 +7,8 @@ namespace Nanofraim\Provider;
 use Nanofraim\AbstractProvider;
 use Tomrf\Logger\Logger;
 
+use function is_scalar;
+
 class LoggerProvider extends AbstractProvider
 {
     public function createService(): \Psr\Log\LoggerInterface

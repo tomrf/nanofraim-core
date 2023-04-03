@@ -15,6 +15,9 @@ use Psr\Http\Server\MiddlewareInterface;
 use Relay\Relay;
 use Tomrf\ServiceContainer\ServiceContainer;
 
+use function gettype;
+use function is_array;
+
 class Application
 {
     private Relay $relay;
@@ -59,8 +62,8 @@ class Application
             throw new FrameworkException('No middleware defined in config, unable to create Relay instance');
         }
 
-        if (!\is_array($middleware)) {
-            throw new FrameworkException('Middleware must be an array, found '.\gettype($middleware));
+        if (!is_array($middleware)) {
+            throw new FrameworkException('Middleware must be an array, found '.gettype($middleware));
         }
 
         $middlewareResolver = new RelayMiddlewareResolver();
