@@ -19,11 +19,11 @@
         "tomrf/autowire": "^0.1",
         "tomrf/servicecontainer": "^0.1",
         "tomrf/configcontainer": "^0.1",
-        "tomrf/logger": "^0.0.2",
-        "tomrf/session": "^0.0.1",
-        "tomrf/http-emitter": "^0.0.2",
-        "tomrf/dotenv": "^0.0.3",
-        "tomrf/php-options": "^0.0.1"
+        "tomrf/logger": "^0.0",
+        "tomrf/session": "^0.0",
+        "tomrf/http-emitter": "^0.0",
+        "tomrf/dotenv": "^0.0",
+        "tomrf/php-options": "^0.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10",
@@ -59,11 +59,14 @@
         "churn": [
             "churn run src/ | tail -n +7"
         ],
-        "test": [
-            "@phpunit",
+        "check": [
+            "@test",
             "@phpmd",
             "@phpstan",
             "@churn"
+        ],
+        "test": [
+            "@phpunit"
         ],
         "coverage": [
             "@putenv XDEBUG_MODE=coverage",
