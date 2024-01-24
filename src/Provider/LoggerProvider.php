@@ -5,18 +5,23 @@ declare(strict_types=1);
 namespace Nanofraim\Provider;
 
 use Nanofraim\AbstractProvider;
+use Psr\Log\LoggerInterface;
 use Tomrf\Logger\Logger;
 
 use function is_scalar;
 
 class LoggerProvider extends AbstractProvider
 {
-    public function createService(): \Psr\Log\LoggerInterface
+    public function createService(): LoggerInterface
     {
         $path = $this->config->get('path');
 
-        return new Logger(
-            is_scalar($path) ? (string) $path : null,
-        );
+        $stream = null;
+
+        if (is_scalar($path)) {
+            $stream = fopen($path, 'a');
+        }
+
+        return new Logger($stream);
     }
 }
