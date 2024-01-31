@@ -16,8 +16,8 @@ class ResponseFactory
         $this->factory = new Psr17Factory();
     }
 
-    public function createResponse(): ResponseInterface
+    public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
     {
-        return $this->factory->createResponse();
+        return $this->factory->createResponse($code, $reasonPhrase);
     }
 }
