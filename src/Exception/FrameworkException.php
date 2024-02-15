@@ -6,6 +6,4 @@ namespace Nanofraim\Exception;
 
 use Exception;
 
-class FrameworkException extends Exception
-{
-}
+class FrameworkException extends Exception {}

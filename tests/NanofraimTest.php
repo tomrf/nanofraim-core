@@ -6,12 +6,18 @@ namespace Nanofraim\Test;
 
 use Nanofraim\Application;
 use Nanofraim\Exception\FrameworkException;
+use Nanofraim\Http\AbstractController;
 use Nanofraim\Http\ResponseEmitter;
 use Nanofraim\Http\ResponseFactory;
+use Nanofraim\Provider\LoggerProvider;
+use Nanofraim\Provider\ResponseFactoryProvider;
+use Nanofraim\Provider\SessionProvider;
+use Nanofraim\Provider\SimpleCacheProvider;
 use Nanofraim\Test\Helper\DummyMiddleware;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use stdClass;
 use Tomrf\Autowire\Autowire;
 use Tomrf\ConfigContainer\ConfigContainer;
 use Tomrf\ServiceContainer\ServiceContainer;
@@ -19,17 +25,17 @@ use Tomrf\ServiceContainer\ServiceContainer;
 /**
  * @internal
  *
+ * @covers \Nanofraim\AbstractProvider
+ * @covers \Nanofraim\Application
  * @covers \Nanofraim\Exception\FrameworkException
- * @covers \Nanofraim\Http\AbstractMiddleware
  * @covers \Nanofraim\Http\AbstractController
+ * @covers \Nanofraim\Http\AbstractMiddleware
  * @covers \Nanofraim\Http\ResponseEmitter
  * @covers \Nanofraim\Http\ResponseFactory
  * @covers \Nanofraim\Provider\LoggerProvider
  * @covers \Nanofraim\Provider\ResponseFactoryProvider
  * @covers \Nanofraim\Provider\SessionProvider
  * @covers \Nanofraim\Provider\SimpleCacheProvider
- * @covers \Nanofraim\Application
- * @covers \Nanofraim\AbstractProvider
  * @covers \Nanofraim\RelayMiddlewareResolver
  * @covers \Nanofraim\Test\Helper\DummyMiddleware
  */
@@ -189,15 +195,15 @@ final class NanofraimTest extends TestCase
         );
 
         $serviceContainer->add(
-            \stdClass::class,
-            static fn () => new \stdClass()
+            stdClass::class,
+            static fn () => new stdClass()
         );
 
         $app = new Application(
             $serviceContainer,
             new ConfigContainer([
                 'middleware' => [
-                    \stdClass::class,
+                    stdClass::class,
                 ],
             ]),
             new ResponseEmitter(),
@@ -210,10 +216,7 @@ final class NanofraimTest extends TestCase
 
     public function testAbstractController(): void
     {
-        $controller = new class (
-            self::$app->createServerRequestFromGlobals(),
-            new ResponseFactory()
-        ) extends \Nanofraim\Http\AbstractController {
+        $controller = new class(self::$app->createServerRequestFromGlobals(), new ResponseFactory()) extends AbstractController {
             public function __invoke(): ResponseInterface
             {
                 return $this->responseFactory->createResponse(200, 'Hello World');
@@ -249,7 +252,7 @@ final class NanofraimTest extends TestCase
     {
         $tempLogFile = tempnam(sys_get_temp_dir(), '__NanofraimTest_');
 
-        $loggerProvider = new \Nanofraim\Provider\LoggerProvider(
+        $loggerProvider = new LoggerProvider(
             new ConfigContainer([
                 'path' => $tempLogFile,
             ]),
@@ -270,7 +273,7 @@ final class NanofraimTest extends TestCase
 
     public function testProviderSessionProvider(): void
     {
-        $sessionProvider = new \Nanofraim\Provider\SessionProvider(
+        $sessionProvider = new SessionProvider(
             new ConfigContainer([
                 'name' => 'NanofraimTest',
             ]),
@@ -289,7 +292,7 @@ final class NanofraimTest extends TestCase
 
     public function testProviderResponseFactoryProvider(): void
     {
-        $responseFactoryProvider = new \Nanofraim\Provider\ResponseFactoryProvider(
+        $responseFactoryProvider = new ResponseFactoryProvider(
             new ConfigContainer(),
         );
 
@@ -308,12 +311,11 @@ final class NanofraimTest extends TestCase
         );
     }
 
-
     public function testProviderSimpleCacheProvider(): void
     {
-        $simpleCacheProvider = new \Nanofraim\Provider\SimpleCacheProvider(
+        $simpleCacheProvider = new SimpleCacheProvider(
             new ConfigContainer([
-                'adapter' => 'array'
+                'adapter' => 'array',
             ]),
         );
 

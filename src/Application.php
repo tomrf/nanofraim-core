@@ -70,7 +70,7 @@ class Application
 
         return new Relay(
             $middleware,
-            fn ($class): MiddlewareInterface => $middlewareResolver->resolveMiddleware($class, $serviceContainer)
+            static fn ($class): MiddlewareInterface => $middlewareResolver->resolveMiddleware($class, $serviceContainer)
         );
     }
 }

@@ -7,6 +7,4 @@ namespace Nanofraim\Http;
 use Nanofraim\Interface\ResponseEmitterInterface;
 use Tomrf\HttpEmitter\HttpEmitter;
 
-class ResponseEmitter extends HttpEmitter implements ResponseEmitterInterface
-{
-}
+class ResponseEmitter extends HttpEmitter implements ResponseEmitterInterface {}

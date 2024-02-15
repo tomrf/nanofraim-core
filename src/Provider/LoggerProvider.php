@@ -19,7 +19,7 @@ class LoggerProvider extends AbstractProvider
         $stream = null;
 
         if (is_scalar($path)) {
-            $stream = fopen((string)$path, 'a');
+            $stream = fopen((string) $path, 'a');
         }
 
         return new Logger($stream);

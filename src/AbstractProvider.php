@@ -10,6 +10,5 @@ abstract class AbstractProvider
 {
     public function __construct(
         protected ConfigContainer $config,
-    ) {
-    }
+    ) {}
 }
