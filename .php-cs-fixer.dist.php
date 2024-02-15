@@ -20,6 +20,9 @@ return (new PhpCsFixer\Config())
     ])
     ->setFinder(
         PhpCsFixer\Finder::create()
-            ->in(__DIR__.'/src')
+            ->in([
+                __DIR__.'/src',
+                __DIR__.'/tests',
+            ])
     )
 ;
