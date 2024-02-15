@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nanofraim\Test;
 
 use Nanofraim\Application;
+use Nanofraim\Exception\FrameworkException;
 use Nanofraim\Http\ResponseEmitter;
 use Nanofraim\Http\ResponseFactory;
 use Nanofraim\Test\Helper\DummyMiddleware;
@@ -31,12 +32,29 @@ final class NanofraimTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$app = self::createApplication();
+        $serviceContainer = new ServiceContainer(
+            new Autowire()
+        );
+
+        $serviceContainer->add(
+            DummyMiddleware::class,
+            static fn () => new DummyMiddleware(new ResponseFactory())
+        );
+
+        self::$app = new Application(
+            $serviceContainer,
+            new ConfigContainer([
+                'middleware' => [
+                    DummyMiddleware::class,
+                ],
+            ]),
+            new ResponseEmitter(),
+        );
     }
 
     public function testInstantiationOfApplication(): void
     {
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             Application::class,
             self::$app
         );
@@ -63,7 +81,7 @@ final class NanofraimTest extends TestCase
             new ResponseEmitter(),
         );
 
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             Application::class,
             $app
         );
@@ -73,7 +91,7 @@ final class NanofraimTest extends TestCase
     {
         $request = self::$app->createServerRequestFromGlobals();
 
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             ServerRequestInterface::class,
             $request
         );
@@ -85,25 +103,25 @@ final class NanofraimTest extends TestCase
 
         $response = self::$app->handle($request);
 
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             ResponseInterface::class,
             $response
         );
 
         // verify http code 200
-        $this->assertSame(
+        self::assertSame(
             200,
             $response->getStatusCode()
         );
 
         // verify X-Dummy-Middleware header
-        $this->assertSame(
+        self::assertSame(
             'true',
             $response->getHeaderLine('X-Dummy-Middleware')
         );
 
         // verify body
-        $this->assertSame(
+        self::assertSame(
             'Hello World',
             (string) $response->getBody()
         );
@@ -122,25 +140,64 @@ final class NanofraimTest extends TestCase
         $this->expectOutputRegex('/Hello World/');
     }
 
-    private static function createApplication(): Application
+    public function testAppWithNoMiddleware(): void
     {
+        $this->expectExceptionMessage('No middleware defined in config, unable to create Relay instance');
+        $this->expectException(FrameworkException::class);
+
+        new Application(
+            new ServiceContainer(
+                new Autowire()
+            ),
+            new ConfigContainer([
+                'middleware' => null,
+            ]),
+            new ResponseEmitter(),
+        );
+    }
+
+    public function testAppWithNonArrayMiddleware(): void
+    {
+        $this->expectExceptionMessage('Middleware must be an array, found string');
+        $this->expectException(FrameworkException::class);
+
+        new Application(
+            new ServiceContainer(
+                new Autowire()
+            ),
+            new ConfigContainer([
+                'middleware' => 'not an array',
+            ]),
+            new ResponseEmitter(),
+        );
+    }
+
+    public function testAppWithMiddlewareNotImplementingMiddlewareInterface(): void
+    {
+        $this->expectExceptionMessage('Middleware must implement MiddlewareInterface');
+        $this->expectException(FrameworkException::class);
+
         $serviceContainer = new ServiceContainer(
             new Autowire()
         );
 
         $serviceContainer->add(
-            DummyMiddleware::class,
-            static fn () => new DummyMiddleware(new ResponseFactory())
+            \stdClass::class,
+            static fn () => new \stdClass()
         );
 
-        return new Application(
+        $app = new Application(
             $serviceContainer,
             new ConfigContainer([
                 'middleware' => [
-                    DummyMiddleware::class,
+                    \stdClass::class,
                 ],
             ]),
             new ResponseEmitter(),
         );
+
+        $request = $app->createServerRequestFromGlobals();
+
+        $app->handle($request);
     }
 }
